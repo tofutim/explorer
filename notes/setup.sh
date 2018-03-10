@@ -25,6 +25,13 @@ CRYPTOPIAID="1658"
 CCEXKEY="xxx-xxx-xxx-xxx"
 GENTX="61f34e6a34cec70f34bc0cdfdaf440d2fa8fcbb66f3c53e9997f575a15a0b6d9"
 GENBLOCK="00000adbafb59ecf24b5d0933cab00b251a155f4a26f184bcb544ae08be3af7b"
+UPDATEBLOCKCHAIN=2
+UPDATEMARKET=5
+UPDATEPEERS=5
+
+# colors
+YELLOW="\033[0;33m"
+RESET="\e[0m"
 
 defSkip=0
 
@@ -200,6 +207,8 @@ then
   echo -e "\033[0;33m   - Updating coin index...\e[0m"
   # note may have to use 'reindex' if issues
   echo "nodejs scripts/sync.js index update"
+  echo -e "\033[0;33m   - Updating blockchain...\e[0m"
+  echo "nodejs scripts/sync.js index update" 
   nodejs scripts/sync.js index update
   echo -e "\033[0;33m   - Updating market data...\e[0m"
   echo "nodejs scripts/sync.js market"
@@ -216,4 +225,48 @@ fi
 if [ $STEP -gt $SKIP ]
 then
   echo -e "\033[0;33m$STEP/$NSTEPS Installing cronjobs\e[0m"
+
+  # shamelessly snatched from https://stackoverflow.com/questions/17267904/updating-cron-with-bash-script
+  function installCron {
+    FREQ=$1   
+    DIR=$2
+    SCRIPT=$3
+
+    DIRESC=$(sed 's/[\*\.&]/\\&/g' <<<"$DIR")
+    SCRIPTESC=$(sed 's/[\*\.&]/\\&/g' <<<"$SCRIPT")
+
+    echo "SCRIPT: $SCRIPT"
+    STATUS=`crontab -l | grep "$SCRIPT"`
+    echo "STATUS: $STATUS"
+    if [ "$STATUS" \> " " ]; then
+      if [ "$STATUS" = "*/$FREQ * * * * cd $DIR && $SCRIPT" ]; then
+        echo -e "No modifications detected"
+      else
+        echo -e "Adjusting freq to $FREQ minute(s)"
+        STATUSESC=$(sed 's/[\*\.&]/\\&/g' <<<"$STATUS")
+        crontab -l | sed "s%$STATUSESC%\*/$FREQ \* \* \* \* cd $DIRESC \&\& $SCRIPTESC%" | crontab -
+      fi
+    else
+      echo -e "CRON not detected - Installing defaults"
+      (crontab -l ; echo "*/$FREQ * * * * cd $DIR && $SCRIPT") | crontab -
+    fi
+  }
+
+  echo -e "\033[0;33m   - Update blockchain every $UPDATEBLOCKCHAIN minute(s)...\e[0m"
+  installCron $UPDATEBLOCKCHAIN $PWD "nodejs scripts/sync.js index update > /dev/null 2>&1"
+  echo -e "\033[0;33m   - Update market every $UPDATEMARKET minute(s)...\e[0m"
+  installCron $UPDATEMARKET $PWD "nodejs scripts/sync.js market > /dev/null 2>&1"
+  echo -e "\033[0;33m   - Update peers every $UPDATEPEERS minute(s)...\e[0m"
+  installCron $UPDATEPEERS $PWD "nodejs scripts/peers.js > /dev/null 2>&1"
+  echo "$cronEntry"
+
+#  crontab -e 
+#  nodejs scripts/sync.js index update
+#  echo -e "\033[0;33m   - Updating market data...\e[0m"
+#  echo "nodejs scripts/sync.js market"
+#  nodejs scripts/sync.js market
+#  echo -e "\033[0;33m   - Updating peers...\e[0m"
+#  echo "nodejs scripts/peers.js"
+#  nodejs scripts/peers.js
 fi
+
