@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2018 The MotaCoin developers
-echo -e "\033[1;33mSetting up MotaCoin Explorer...\e[0m"
+echo -e "\033[1;33mSetting up MotaCoin Explorer...$RESET"
 
 # parameters
 DBNAME="motadb"
@@ -41,14 +41,14 @@ NSTEPS=10
 
 if [ $SKIP -gt 0 ]
 then
-  echo -e "\033[0;33mSkipping $SKIP step(s)\e[0m"
+  echo -e "$YELLOW Skipping $SKIP step(s)$RESET"
 fi
 
 # 1/10
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Installing nodejs and npm\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Installing nodejs and npm$RESET"
   apt install -y nodejs npm
   # https://stackoverflow.com/questions/18130164/nodejs-vs-node-on-ubuntu-12-04
   ln -s `which nodejs` /usr/bin/node
@@ -59,22 +59,22 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Installing mongodb\e[0m"
-  echo -e "\033[0;33m   - Importing public key...\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Installing mongodb$RESET"
+  echo -e "$YELLOW    - Importing public key...$RESET"
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
-  echo -e "\033[0;33m   - Creating list file...\e[0m"
+  echo -e "$YELLOW    - Creating list file...$RESET"
   echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
-  echo -e "\033[0;33m   - Reloading package database...\e[0m"
+  echo -e "$YELLOW    - Reloading package database...$RESET"
   apt update
-  echo -e "\033[0;33m   - Installing package...\e[0m"
+  echo -e "$YELLOW    - Installing package...$RESET"
   apt install -y mongodb-org
-  echo -e "\033[0;33m   - Starting mongod...\e[0m"
+  echo -e "$YELLOW    - Starting mongod...$RESET"
   service mongod start
   COUNTER=0
   while !(nc -z localhost 27017) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
     let COUNTER+=2
-    echo -e "\033[0;33m   - Waiting for mongo to initialize... ($COUNTER seconds so far)\e[0m"
+    echo -e "$YELLOW    - Waiting for mongo to initialize... ($COUNTER seconds so far)$RESET"
   done
   echo
 fi
@@ -83,7 +83,7 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Setting up database $DBNAME using $DBUSER/$DBPASS\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Setting up database $DBNAME using $DBUSER/$DBPASS$RESET"
   mongo admin --eval "db.getSiblingDB('$DBNAME')"
   mongo $DBNAME --eval "db.createUser( { user: '$DBUSER', pwd: '$DBPASS', roles: [ 'readWrite' ] } )" 
   echo
@@ -93,10 +93,10 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-echo -e "\033[0;33m$STEP/$NSTEPS Installing dependencies\e[0m"
-echo -e "\033[0;33m   - Installing libkrb5-dev for kerberos...\e[0m"
+echo -e "$YELLOW $STEP/$NSTEPS Installing dependencies$RESET"
+echo -e "$YELLOW    - Installing libkrb5-dev for kerberos...$RESET"
 apt install -y libkrb5-dev
-echo -e "\033[0;33m   - Installing production dependencies...\e[0m"
+echo -e "$YELLOW    - Installing production dependencies...$RESET"
 npm install --production
 fi
 
@@ -104,13 +104,13 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Configuring explorer\e[0m"
-  echo -e "\033[0;33m   - Replicating template...\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Configuring explorer$RESET"
+  echo -e "$YELLOW    - Replicating template...$RESET"
   cp ./settings.json.template ./settings.json
 # ideally use jq but sadly jq does not support comments!
-# echo -e "\033[0;33m   - Installing jq...\e[0m"
+# echo -e "$YELLOW    - Installing jq...$RESET"
 # apt install -y jq
-  echo -e "\033[0;33m   - Replacing parameters...\e[0m"
+  echo -e "$YELLOW    - Replacing parameters...$RESET"
 
   # General
   confSearch='"title": ".*"'
@@ -194,29 +194,29 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Initial sync\e[0m"
-  echo -e "\033[0;33m   - Starting server...\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Initial sync$RESET"
+  echo -e "$YELLOW    - Starting server...$RESET"
   npm start &
   COUNTER=0
   while !(nc -z localhost 3001) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
     let COUNTER+=2
-    echo -e "\033[0;33m   - Waiting for explorer to initialize... ($COUNTER seconds so far)\e[0m"
+    echo -e "$YELLOW    - Waiting for explorer to initialize... ($COUNTER seconds so far)$RESET"
   done
   sleep 5
-  echo -e "\033[0;33m   - Updating coin index...\e[0m"
+  echo -e "$YELLOW    - Updating coin index...$RESET"
   # note may have to use 'reindex' if issues
   echo "nodejs scripts/sync.js index update"
-  echo -e "\033[0;33m   - Updating blockchain...\e[0m"
+  echo -e "$YELLOW    - Updating blockchain...$RESET"
   echo "nodejs scripts/sync.js index update" 
   nodejs scripts/sync.js index update
-  echo -e "\033[0;33m   - Updating market data...\e[0m"
+  echo -e "$YELLOW    - Updating market data...$RESET"
   echo "nodejs scripts/sync.js market"
   nodejs scripts/sync.js market
-  echo -e "\033[0;33m   - Updating peers...\e[0m"
+  echo -e "$YELLOW    - Updating peers...$RESET"
   echo "nodejs scripts/peers.js"
   nodejs scripts/peers.js
-  echo -e "\033[0;33m   - Stopping server...\e[0m"
+  echo -e "$YELLOW    - Stopping server...$RESET"
   npm stop
 fi
 
@@ -224,7 +224,7 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "\033[0;33m$STEP/$NSTEPS Installing cronjobs\e[0m"
+  echo -e "$YELLOW $STEP/$NSTEPS Installing cronjobs$RESET"
 
   # shamelessly snatched from https://stackoverflow.com/questions/17267904/updating-cron-with-bash-script
   function installCron {
@@ -252,21 +252,17 @@ then
     fi
   }
 
-  echo -e "\033[0;33m   - Update blockchain every $UPDATEBLOCKCHAIN minute(s)...\e[0m"
+  echo -e "$YELLOW    - Update blockchain every $UPDATEBLOCKCHAIN minute(s)...$RESET"
   installCron $UPDATEBLOCKCHAIN $PWD "nodejs scripts/sync.js index update > /dev/null 2>&1"
-  echo -e "\033[0;33m   - Update market every $UPDATEMARKET minute(s)...\e[0m"
+  echo -e "$YELLOW    - Update market every $UPDATEMARKET minute(s)...$RESET"
   installCron $UPDATEMARKET $PWD "nodejs scripts/sync.js market > /dev/null 2>&1"
-  echo -e "\033[0;33m   - Update peers every $UPDATEPEERS minute(s)...\e[0m"
+  echo -e "$YELLOW    - Update peers every $UPDATEPEERS minute(s)...$RESET"
   installCron $UPDATEPEERS $PWD "nodejs scripts/peers.js > /dev/null 2>&1"
-  echo "$cronEntry"
-
-#  crontab -e 
-#  nodejs scripts/sync.js index update
-#  echo -e "\033[0;33m   - Updating market data...\e[0m"
-#  echo "nodejs scripts/sync.js market"
-#  nodejs scripts/sync.js market
-#  echo -e "\033[0;33m   - Updating peers...\e[0m"
-#  echo "nodejs scripts/peers.js"
-#  nodejs scripts/peers.js
 fi
 
+# 8/10
+((STEP++))
+if [ $STEP -gt $SKIP ]
+then
+  echo -e "$YELLOW $STEP/$NSTEPS Setup explorer as service$RESET"
+fi
