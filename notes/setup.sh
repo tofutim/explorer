@@ -22,6 +22,8 @@ if [ $STEP -gt $SKIP ]
 then
   echo -e "\033[0;33m$STEP/$NSTEPS Installing nodejs and npm\e[0m"
   apt install nodejs npm
+  # https://stackoverflow.com/questions/18130164/nodejs-vs-node-on-ubuntu-12-04
+  ln -s `which nodejs` /usr/bin/node
   echo
 fi
 
@@ -61,5 +63,9 @@ fi
 if [ $STEP -gt $SKIP ]
 then
 echo -e "\033[0;33m$STEP/$NSTEPS Installing dependencies\e[0m"
+echo -e "\033[0;33m   - Installing libkrb5-dev for kerberos...\e[0m"
+apt install libkrb5-dev
+echo -e "\033[0;33m   - Installing production dependencies...\e[0m"
+npm install --production
 fi
 
