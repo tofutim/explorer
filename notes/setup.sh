@@ -23,7 +23,7 @@ APIADDRESS="MFGYRrpK5nKC6EfTuJXSbsFqYTKP1CsAjN"
 EXCHANGE="BTC"
 CRYPTOPIAID="1658"
 CCEXKEY="xxx-xxx-xxx-xxx"
-GENTX=""
+GENTX="61f34e6a34cec70f34bc0cdfdaf440d2fa8fcbb66f3c53e9997f575a15a0b6d9"
 GENBLOCK="00000adbafb59ecf24b5d0933cab00b251a155f4a26f184bcb544ae08be3af7b"
 
 defSkip=0
@@ -196,14 +196,19 @@ then
     let COUNTER+=2
     echo -e "\033[0;33m   - Waiting for explorer to initialize... ($COUNTER seconds so far)\e[0m"
   done
+  sleep 5
   echo -e "\033[0;33m   - Updating coin index...\e[0m"
-  nodejs scripts/sync.js index reindex
+  # note may have to use 'reindex' if issues
+  echo "nodejs scripts/sync.js index update"
+  nodejs scripts/sync.js index update
   echo -e "\033[0;33m   - Updating market data...\e[0m"
+  echo "nodejs scripts/sync.js market"
   nodejs scripts/sync.js market
   echo -e "\033[0;33m   - Updating peers...\e[0m"
+  echo "nodejs scripts/peers.js"
   nodejs scripts/peers.js
-#  echo -e "\033[0;33m   - Stopping server...\e[0m"
-#  npm stop
+  echo -e "\033[0;33m   - Stopping server...\e[0m"
+  npm stop
 fi
 
 # 7/10
