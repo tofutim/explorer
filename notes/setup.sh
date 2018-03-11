@@ -2,7 +2,12 @@
 # Copyright (c) 2018 The MotaCoin developers
 echo -e "\033[1;33mSetting up MotaCoin Explorer...$RESET"
 
+# environment
+RUNNER=`whoami`
+echo "Running script as $RUNNER"
+
 # parameters
+COINDPATH="~/Projects/MotaCoinDevelopment/src/MotaCoind"
 DBNAME="motadb"
 DBUSER="motauser"
 DBPASS="m0T43xp!0re"
@@ -49,9 +54,9 @@ fi
 if [ $STEP -gt $SKIP ]
 then
   echo -e "$YELLOW $STEP/$NSTEPS Installing nodejs and npm$RESET"
-  apt install -y nodejs npm
+  sudo apt install -y nodejs npm
   # https://stackoverflow.com/questions/18130164/nodejs-vs-node-on-ubuntu-12-04
-  ln -s `which nodejs` /usr/bin/node
+  sudo ln -s `which nodejs` /usr/bin/node
   echo
 fi
 
@@ -61,15 +66,15 @@ if [ $STEP -gt $SKIP ]
 then
   echo -e "$YELLOW $STEP/$NSTEPS Installing mongodb$RESET"
   echo -e "$YELLOW    - Importing public key...$RESET"
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
   echo -e "$YELLOW    - Creating list file...$RESET"
   echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
   echo -e "$YELLOW    - Reloading package database...$RESET"
-  apt update
+  sudo apt update
   echo -e "$YELLOW    - Installing package...$RESET"
-  apt install -y mongodb-org
-  echo -e "$YELLOW    - Starting mongod...$RESET"
-  service mongod start
+  sudo apt install -y mongodb-org
+  echo -e "$YELLOW    - Starting mongodb...$RESET"
+  sudo service mongodb restart
   COUNTER=0
   while !(nc -z localhost 27017) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
@@ -93,11 +98,13 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-echo -e "$YELLOW $STEP/$NSTEPS Installing dependencies$RESET"
-echo -e "$YELLOW    - Installing libkrb5-dev for kerberos...$RESET"
-apt install -y libkrb5-dev
-echo -e "$YELLOW    - Installing production dependencies...$RESET"
-npm install --production
+  echo -e "$YELLOW $STEP/$NSTEPS Installing dependencies$RESET"
+  echo -e "$YELLOW    - Installing libkrb5-dev for kerberos...$RESET" 
+  sudo apt install -y libkrb5-dev
+  echo -e "$YELLOW    - Installing production dependencies...$RESET"
+  npm install --production
+  echo -e "$YELLOW    - Installing PM2 task manager...$RESET"
+  sudo npm install -g pm2
 fi
 
 # 5/10
@@ -196,7 +203,7 @@ if [ $STEP -gt $SKIP ]
 then
   echo -e "$YELLOW $STEP/$NSTEPS Initial sync$RESET"
   echo -e "$YELLOW    - Starting server...$RESET"
-  npm start &
+  pm2 -f start bin/instance --node-args="--stack-size=32000" 
   COUNTER=0
   while !(nc -z localhost 3001) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
@@ -216,8 +223,6 @@ then
   echo -e "$YELLOW    - Updating peers...$RESET"
   echo "nodejs scripts/peers.js"
   nodejs scripts/peers.js
-  echo -e "$YELLOW    - Stopping server...$RESET"
-  npm stop
 fi
 
 # 7/10
@@ -264,14 +269,59 @@ fi
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "$YELLOW $STEP/$NSTEPS Setup explorer as service$RESET"
+  echo -e "$YELLOW $STEP/$NSTEPS Ensure explorer survives reboot$RESET"
+  sudo pm2 startup
+  sudo pm2 save
 fi
 
 # 9/10
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "$YELLOW $STEP/$NSTEPS Install and configure nginx$RESET"
+  echo -e "$YELLOW $STEP/$NSTEPS Installing and ensuring MotaCoind survives reboot$RESET"
+  echo -e "$YELLOW    - Installing git...$RESET"
+  sudo apt install git
+  echo -e "$YELLOW    - Cloning repository...$RESET"
+  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/Projects/MotaCoind
+  echo -e "$YELLOW    - Installing dependencies...$RESET"
+  echo "NOT YET IMPLEMENTED"
+  echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RESET"
+  SAVEDDIR=`pwd`
+  cd ~/Projects/MotaCoind/src
+  sudo git checkout feature/init
+  make -f makefile.unix
+  sudo make -f makefile.unix install
+  echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
+  cd ~/Projects/MotaCoind/contrib/init
+  cp MotaCoind.service.template MotaCoind.service  
+  confSearch='User=.*'
+  confReplacement='User='$RUNNER''
+  sed -i'' "s/$confSearch/$confReplacement/g" MotaCoind.service
+  sudo cp MotaCoind.service /etc/systemd/system/.
+  sudo chmod 755 /etc/systemd/system/MotaCoind.service
+  sudo mkdir -p /etc/motacoin
+  sudo cp ~/Projects/MotaCoind/MotaCoin.conf /etc/motacoin/.
+  cd $SAVEDDIR
+  sudo systemctl start MotaCoind
+  COUNTER=0
+  while !(nc -z localhost 17421) && [[ $COUNTER -lt 60 ]] ; do
+    sleep 2
+    let COUNTER+=2
+    echo -e "$YELLOW    - Waiting for MotaCoind to initialize... ($COUNTER seconds so far)$RESET"
+  done
 fi
 
-
+# 10/10
+((STEP++))
+if [ $STEP -gt $SKIP ]
+then
+  echo -e "$YELLOW $STEP/$NSTEPS Install and configure nginx$RESET"
+  echo -e "$YELLOW    - Installing nginx...$RESET"
+  sudo apt install -y nginx
+  echo "Please manually add this to /etc/nginx/sites-enabled/default"
+  echo "	
+       location / {
+               proxy_pass http://127.0.0.1:3001;
+       }"
+  echo "then 'sudo service nginx restart'"
+fi
