@@ -266,3 +266,12 @@ if [ $STEP -gt $SKIP ]
 then
   echo -e "$YELLOW $STEP/$NSTEPS Setup explorer as service$RESET"
 fi
+
+# 9/10
+((STEP++))
+if [ $STEP -gt $SKIP ]
+then
+  echo -e "$YELLOW $STEP/$NSTEPS Install and configure nginx$RESET"
+fi
+
+
