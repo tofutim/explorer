@@ -7,7 +7,7 @@ RUNNER=`whoami`
 echo "Running script as $RUNNER"
 
 # parameters
-COINDPATH="~/Projects/MotaCoinDevelopment/src/MotaCoind"
+COINDPATH="~/motacoin/src/MotaCoind"
 DBNAME="motadb"
 DBUSER="motauser"
 DBPASS="m0T43xp!0re"
@@ -49,25 +49,25 @@ then
   echo -e "$YELLOW Skipping $SKIP step(s)$RESET"
 fi
 
-# 9/10
+# 0/10
 ((STEP++))
 if [ $STEP -gt $SKIP ]
 then
-  echo -e "$YELLOW $STEP/$NSTEPS Installing and ensuring MotaCoind survives reb$
+  echo -e "$YELLOW $STEP/$NSTEPS Installing and ensuring MotaCoind survives reboot$RESET"
   echo -e "$YELLOW    - Installing git...$RESET"
-  sudo apt install git
+  sudo apt install git netcat
   echo -e "$YELLOW    - Cloning repository...$RESET"
-  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/Projects/MotaCoind
+  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/motacoin
   echo -e "$YELLOW    - Installing dependencies...$RESET"
   echo "NOT YET IMPLEMENTED"
   echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RESET"
   SAVEDDIR=`pwd`
-  cd ~/Projects/MotaCoind/src
-  sudo git checkout feature/init
+  cd ~/motacoin/src
+  git checkout feature/init
   make -f makefile.unix
   sudo make -f makefile.unix install
   echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
-  cd ~/Projects/MotaCoind/contrib/init
+  cd ~/motacoin/contrib/init
   cp MotaCoind.service.template MotaCoind.service
   confSearch='User=.*'
   confReplacement='User='$RUNNER''
@@ -75,7 +75,7 @@ then
   sudo cp MotaCoind.service /etc/systemd/system/.
   sudo chmod 755 /etc/systemd/system/MotaCoind.service
   sudo mkdir -p /etc/motacoin
-  sudo cp ~/Projects/MotaCoind/MotaCoin.conf /etc/motacoin/.
+  sudo cp ~/motacoin/MotaCoin.conf /etc/motacoin/.
   cd $SAVEDDIR
   sudo systemctl start MotaCoind
   COUNTER=0
@@ -320,17 +320,17 @@ then
   echo -e "$YELLOW    - Installing git...$RESET"
   sudo apt install git
   echo -e "$YELLOW    - Cloning repository...$RESET"
-  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/Projects/MotaCoind
+  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/motacoin
   echo -e "$YELLOW    - Installing dependencies...$RESET"
   echo "NOT YET IMPLEMENTED"
   echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RESET"
   SAVEDDIR=`pwd`
-  cd ~/Projects/MotaCoind/src
+  cd ~/motacoin/src
   sudo git checkout feature/init
   make -f makefile.unix
   sudo make -f makefile.unix install
   echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
-  cd ~/Projects/MotaCoind/contrib/init
+  cd ~/motacoin/contrib/init
   cp MotaCoind.service.template MotaCoind.service  
   confSearch='User=.*'
   confReplacement='User='$RUNNER''
@@ -338,7 +338,7 @@ then
   sudo cp MotaCoind.service /etc/systemd/system/.
   sudo chmod 755 /etc/systemd/system/MotaCoind.service
   sudo mkdir -p /etc/motacoin
-  sudo cp ~/Projects/MotaCoind/MotaCoin.conf /etc/motacoin/.
+  sudo cp ~/motacoin/MotaCoin.conf /etc/motacoin/.
   cd $SAVEDDIR
   sudo systemctl start MotaCoind
   COUNTER=0
