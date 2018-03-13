@@ -52,3 +52,50 @@ cp ./settings.json.template ./settings.json
 ```
 npm start
 ```
+
+node is now nodejs
+
+
+
+nodejs --stack-size=10000 bin/instance
+
+Error: Cannot find module 'debug'
+    at Function.Module._resolveFilename (module.js:326:15)
+    at Function.Module._load (module.js:277:25)
+    at Module.require (module.js:354:17)
+    at require (internal/module.js:12:17)
+    at Object.<anonymous> (/home/tim/Projects/explorer/bin/instance:2:13)
+    at Module._compile (module.js:410:26)
+    at Object.Module._extensions..js (module.js:417:10)
+    at Module.load (module.js:344:32)
+    at Function.Module._load (module.js:301:12)
+    at Function.Module.runMain (module.js:442:10)
+tim@loqu8-local:~/Projects/explorer$ npm install debug
+
+Error: Cannot find module 'jsonminify'
+    at Function.Module._resolveFilename (module.js:326:15)
+    at Function.Module._load (module.js:277:25)
+    at Module.require (module.js:354:17)
+    at require (internal/module.js:12:17)
+    at Object.<anonymous> (/home/tim/Projects/explorer/lib/settings.js:7:18)
+    at Module._compile (module.js:410:26)
+    at Object.Module._extensions..js (module.js:417:10)
+    at Module.load (module.js:344:32)
+    at Function.Module._load (module.js:301:12)
+    at Module.require (module.js:354:17)
+tim@loqu8-local:~/Projects/explorer$ npm install jsonminify
+explorer@1.6.1 /home/tim/Projects/explorer
+└── jsonminify@0.2.3 
+
+
+Error: Cannot find module 'mongoose'
+    at Function.Module._resolveFilename (module.js:326:15)
+    at Function.Module._load (module.js:277:25)
+    at Module.require (module.js:354:17)
+    at require (internal/module.js:12:17)
+    at Object.<anonymous> (/home/tim/Projects/explorer/lib/database.js:1:78)
+    at Module._compile (module.js:410:26)
+    at Object.Module._extensions..js (module.js:417:10)
+    at Module.load (module.js:344:32)
+    at Function.Module._load (module.js:301:12)
+    at Module.require (module.js:354:17)
