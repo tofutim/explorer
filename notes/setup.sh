@@ -60,7 +60,7 @@ then
   git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/Projects/MotaCoind
   echo -e "$YELLOW    - Installing dependencies...$RESET"
   echo "NOT YET IMPLEMENTED"
-  echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RE$
+  echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RESET"
   SAVEDDIR=`pwd`
   cd ~/Projects/MotaCoind/src
   sudo git checkout feature/init
@@ -68,7 +68,7 @@ then
   sudo make -f makefile.unix install
   echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
   cd ~/Projects/MotaCoind/contrib/init
-  cp MotaCoind.service.template MotaCoind.service  
+  cp MotaCoind.service.template MotaCoind.service
   confSearch='User=.*'
   confReplacement='User='$RUNNER''
   sed -i'' "s/$confSearch/$confReplacement/g" MotaCoind.service
@@ -82,7 +82,7 @@ then
   while !(nc -z localhost 17421) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
     let COUNTER+=2
-    echo -e "$YELLOW    - Waiting for MotaCoind to initialize... ($COUNTER seco$
+    echo -e "$YELLOW    - Waiting for MotaCoind to initialize... ($COUNTER seconds)$RESET"
   done
 fi
 
