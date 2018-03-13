@@ -49,6 +49,44 @@ then
   echo -e "$YELLOW Skipping $SKIP step(s)$RESET"
 fi
 
+# 9/10
+((STEP++))
+if [ $STEP -gt $SKIP ]
+then
+  echo -e "$YELLOW $STEP/$NSTEPS Installing and ensuring MotaCoind survives reb$
+  echo -e "$YELLOW    - Installing git...$RESET"
+  sudo apt install git
+  echo -e "$YELLOW    - Cloning repository...$RESET"
+  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/Projects/MotaCoind
+  echo -e "$YELLOW    - Installing dependencies...$RESET"
+  echo "NOT YET IMPLEMENTED"
+  echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RE$
+  SAVEDDIR=`pwd`
+  cd ~/Projects/MotaCoind/src
+  sudo git checkout feature/init
+  make -f makefile.unix
+  sudo make -f makefile.unix install
+  echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
+  cd ~/Projects/MotaCoind/contrib/init
+  cp MotaCoind.service.template MotaCoind.service  
+  confSearch='User=.*'
+  confReplacement='User='$RUNNER''
+  sed -i'' "s/$confSearch/$confReplacement/g" MotaCoind.service
+  sudo cp MotaCoind.service /etc/systemd/system/.
+  sudo chmod 755 /etc/systemd/system/MotaCoind.service
+  sudo mkdir -p /etc/motacoin
+  sudo cp ~/Projects/MotaCoind/MotaCoin.conf /etc/motacoin/.
+  cd $SAVEDDIR
+  sudo systemctl start MotaCoind
+  COUNTER=0
+  while !(nc -z localhost 17421) && [[ $COUNTER -lt 60 ]] ; do
+    sleep 2
+    let COUNTER+=2
+    echo -e "$YELLOW    - Waiting for MotaCoind to initialize... ($COUNTER seco$
+  done
+fi
+
+
 # 1/10
 ((STEP++))
 if [ $STEP -gt $SKIP ]
