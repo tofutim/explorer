@@ -103,16 +103,18 @@ fi
 if [ $STEP -gt $SKIP ]
 then
   echo -e "$YELLOW $STEP/$NSTEPS Installing mongodb$RESET"
+  sudo apt install apt-transport-https
   echo -e "$YELLOW    - Importing public key...$RESET"
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
   echo -e "$YELLOW    - Creating list file...$RESET"
-  echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+  echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list
   echo -e "$YELLOW    - Reloading package database...$RESET"
   sudo apt update
   echo -e "$YELLOW    - Installing package...$RESET"
   sudo apt install -y mongodb-org
   echo -e "$YELLOW    - Starting mongodb...$RESET"
-  sudo service mongodb restart
+  sudo systemctl enable mongod
+  sudo service mongod start
   COUNTER=0
   while !(nc -z localhost 27017) && [[ $COUNTER -lt 60 ]] ; do
     sleep 2
@@ -254,6 +256,7 @@ then
   echo "nodejs scripts/sync.js index update"
   echo -e "$YELLOW    - Updating blockchain...$RESET"
   echo "nodejs scripts/sync.js index update" 
+  mkdir -p tmp
   nodejs scripts/sync.js index update
   echo -e "$YELLOW    - Updating market data...$RESET"
   echo "nodejs scripts/sync.js market"
@@ -312,54 +315,34 @@ then
   sudo pm2 save
 fi
 
-# 9/10
-((STEP++))
-if [ $STEP -gt $SKIP ]
-then
-  echo -e "$YELLOW $STEP/$NSTEPS Installing and ensuring MotaCoind survives reboot$RESET"
-  echo -e "$YELLOW    - Installing git...$RESET"
-  sudo apt install git
-  echo -e "$YELLOW    - Cloning repository...$RESET"
-  git clone git@github.com:tofutim/MotaCoinDevelopment.git ~/motacoin
-  echo -e "$YELLOW    - Installing dependencies...$RESET"
-  echo "NOT YET IMPLEMENTED"
-  echo -e "$YELLOW    - Making MotaCoind and installing to /usr/local/bin...$RESET"
-  SAVEDDIR=`pwd`
-  cd ~/motacoin/src
-  sudo git checkout feature/init
-  make -f makefile.unix
-  sudo make -f makefile.unix install
-  echo -e "$YELLOW    - Setting up Ubuntu service...$RESET"
-  cd ~/motacoin/contrib/init
-  cp MotaCoind.service.template MotaCoind.service  
-  confSearch='User=.*'
-  confReplacement='User='$RUNNER''
-  sed -i'' "s/$confSearch/$confReplacement/g" MotaCoind.service
-  sudo cp MotaCoind.service /etc/systemd/system/.
-  sudo chmod 755 /etc/systemd/system/MotaCoind.service
-  sudo mkdir -p /etc/motacoin
-  sudo cp ~/motacoin/MotaCoin.conf /etc/motacoin/.
-  cd $SAVEDDIR
-  sudo systemctl start MotaCoind
-  COUNTER=0
-  while !(nc -z localhost 17421) && [[ $COUNTER -lt 60 ]] ; do
-    sleep 2
-    let COUNTER+=2
-    echo -e "$YELLOW    - Waiting for MotaCoind to initialize... ($COUNTER seconds so far)$RESET"
-  done
-fi
 
 # 10/10
-((STEP++))
-if [ $STEP -gt $SKIP ]
-then
-  echo -e "$YELLOW $STEP/$NSTEPS Install and configure nginx$RESET"
-  echo -e "$YELLOW    - Installing nginx...$RESET"
-  sudo apt install -y nginx
-  echo "Please manually add this to /etc/nginx/sites-enabled/default"
-  echo "	
-       location / {
-               proxy_pass http://127.0.0.1:3001;
-       }"
-  echo "then 'sudo service nginx restart'"
-fi
+#((STEP++))
+#if [ $STEP -gt $SKIP ]
+#then
+#  echo -e "$YELLOW $STEP/$NSTEPS Install and configure nginx$RESET"
+#  echo -e "$YELLOW    - Installing nginx...$RESET"
+#  sudo apt install -y nginx
+#  echo "Please manually add this to /etc/nginx/sites-enabled/default"
+#  echo "	
+#       location / {
+#               proxy_pass http://127.0.0.1:3001;
+#       }"
+#  echo "then 'sudo service nginx restart'"
+#fi
+
+
+# For Apache
+#<VirtualHost *:80>
+#  ServerName explorer.motacoin.vip
+#  DocumentRoot /var/www/nodeapp/
+#  Options -Indexes
+#  ErrorDocument 503 /check.html
+#
+#  ProxyRequests on
+#  ProxyPass /check.html !
+#  ProxyPass / http://explorer.motacoin.vip:3001/
+#  ProxyPassReverse / http://explorer.motacoin.vip:3001/
+#</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
