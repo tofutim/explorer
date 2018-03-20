@@ -299,11 +299,11 @@ then
   }
 
   echo -e "$YELLOW    - Update blockchain every $UPDATEBLOCKCHAIN minute(s)...$RESET"
-  installCron $UPDATEBLOCKCHAIN $PWD "nodejs scripts/sync.js index update > /dev/null 2>&1"
+  installCron $UPDATEBLOCKCHAIN $PWD "/usr/bin/nodejs scripts/sync.js index update > /dev/null 2>&1"
   echo -e "$YELLOW    - Update market every $UPDATEMARKET minute(s)...$RESET"
-  installCron $UPDATEMARKET $PWD "nodejs scripts/sync.js market > /dev/null 2>&1"
+  installCron $UPDATEMARKET $PWD "/usr/bin/nodejs scripts/sync.js market > /dev/null 2>&1"
   echo -e "$YELLOW    - Update peers every $UPDATEPEERS minute(s)...$RESET"
-  installCron $UPDATEPEERS $PWD "nodejs scripts/peers.js > /dev/null 2>&1"
+  installCron $UPDATEPEERS $PWD "/usr/bin/nodejs scripts/peers.js > /dev/null 2>&1"
 fi
 
 # 8/10
