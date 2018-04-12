@@ -10,8 +10,7 @@ var express = require('express')
   , lib = require('./lib/explorer')
   , db = require('./lib/database')
   , locale = require('./lib/locale')
-  , request = require('request')
-  , async = require("async");
+  , request = require('request');
 
 var app = express();
 
@@ -78,37 +77,8 @@ app.use('/ext/getaddress/:hash', function(req,res){
 // GETUTXOS API. 
 app.use('/ext/getutxos/:hash', function(req,res){
   db.get_address(req.param('hash'), function(address){
-    var a_ext = [];	  
-    var i = 0;
     if (address) {
-      async.each(address.txs, function(address_tx){
-		if (address_tx.type == "vout") {
-          var out_hash = address_tx.addresses;
-          var out_index = address_tx.out_index;
-          db.check_is_unspent( out_hash, out_index, function( isUnspent )  {
-            if (isUnspent) 	{
-              lib.get_rawtransaction(out_hash, function(tx){
-                if (tx != 'There was an error. Check your console.') {
-                  a_ext.push( { address: address.address,
-                                txid: out_hash,
-                                vout: out_index,
-                                ts: tx.time,
-                                scriptPubKey: tx.vout[out_index].scriptPubKey,
-                                amount: tx.vout[out_index].valueSat,
-                                satoshis: tx.vout[out_index].valueSat,
-                                confirmations: tx.confirmations
-                            });
-console.info('a_ext.length ='+ a_ext.length + '; confirmations:'+ tx.confirmations );
-                }
-              });
-            }
-          });  
-        }  
-      },
-      function(err){
-       console.info('end');	  
-       res.send(a_ext);
-      });
+      res.send( address.unspent );
 	}
 	else {
       res.send({ error: 'address not found.', hash: req.param('hash')})
