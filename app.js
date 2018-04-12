@@ -10,7 +10,8 @@ var express = require('express')
   , lib = require('./lib/explorer')
   , db = require('./lib/database')
   , locale = require('./lib/locale')
-  , request = require('request');
+  , request = require('request')
+  , async = require("async");
 
 var app = express();
 
@@ -75,45 +76,47 @@ app.use('/ext/getaddress/:hash', function(req,res){
 });
 
 // GETUTXOS API. 
-/*
 app.use('/ext/getutxos/:hash', function(req,res){
   db.get_address(req.param('hash'), function(address){
+    var a_ext = [];	  
+    var i = 0;
     if (address) {
-      module.exports.syncLoop(address.txs.length, function (loop) {
-		  var i = loop.iteration();
-		  if (address.txs[i].type == "vout") {
-			var out_hash = address.txs[i].address;
-			var out_index;
-			lib.get_rawtransaction(txid, function(tx){
-				if (tx != 'There was an error. Check your console.') {
-				  tx.vout.findIndex(  )
-				}
-				else {
-				  return cb('tx not found: ' + txid);
-				}
-				
-			});
-			
-			db.check_is_spent( tx_output, function( tx_output, out_index, cb))  ) {
-			
-			
-			}
-
-			loop.break(true);
-			loop.next();
-		  } else {
-			loop.next();
-		  }
-	  }, function(){
-			return cb(unique, index);
-	  });
-      res.send(a_ext);
-    } else {
+      async.each(address.txs, function(address_tx){
+		if (address_tx.type == "vout") {
+          var out_hash = address_tx.addresses;
+          var out_index = address_tx.out_index;
+          db.check_is_unspent( out_hash, out_index, function( isUnspent )  {
+            if (isUnspent) 	{
+              lib.get_rawtransaction(out_hash, function(tx){
+                if (tx != 'There was an error. Check your console.') {
+                  a_ext.push( { address: address.address,
+                                txid: out_hash,
+                                vout: out_index,
+                                ts: tx.time,
+                                scriptPubKey: tx.vout[out_index].scriptPubKey,
+                                amount: tx.vout[out_index].valueSat,
+                                satoshis: tx.vout[out_index].valueSat,
+                                confirmations: tx.confirmations
+                            });
+console.info('a_ext.length ='+ a_ext.length + '; confirmations:'+ tx.confirmations );
+                }
+              });
+            }
+          });  
+        }  
+      },
+      function(err){
+       console.info('end');	  
+       res.send(a_ext);
+      });
+	}
+	else {
       res.send({ error: 'address not found.', hash: req.param('hash')})
     }
-  });
+  });	
 });
-*/
+
+
 app.use('/ext/getbalance/:hash', function(req,res){
   db.get_address(req.param('hash'), function(address){
     if (address) {
