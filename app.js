@@ -74,6 +74,19 @@ app.use('/ext/getaddress/:hash', function(req,res){
   });
 });
 
+// GETUTXOS API. 
+app.use('/ext/getutxos/:hash', function(req,res){
+  db.get_address(req.param('hash'), function(address){
+    if (address) {
+      res.send( address.unspent );
+	}
+	else {
+      res.send({ error: 'address not found.', hash: req.param('hash')})
+    }
+  });	
+});
+
+
 app.use('/ext/getbalance/:hash', function(req,res){
   db.get_address(req.param('hash'), function(address){
     if (address) {
